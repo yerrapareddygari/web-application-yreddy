@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineVault — Great Films 1990–2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --card: #1a1a26;
+    --border: #2a2a3e;
+    --gold: #f5c518;
+    --gold-dim: #c9a10a;
+    --accent: #e05c2a;
+    --text: #e8e8f0;
+    --muted: #7a7a9a;
+    --chip-bg: #1e1e2e;
+    --chip-active: #f5c518;
+    --chip-active-text: #0a0a0f;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: relative;
+    padding: 60px 40px 40px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #0d0d16 0%, var(--bg) 100%);
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(245,197,24,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  header::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: 100px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(224,92,42,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-inner { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+  .logo-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.8;
+  }
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 6vw, 80px);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -2px;
+    color: #fff;
+  }
+  h1 span { color: var(--gold); font-style: italic; }
+  .header-sub {
+    margin-top: 18px;
+    font-size: 15px;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.3px;
+  }
+  .count-badge {
+    display: inline-block;
+    margin-top: 20px;
+    background: var(--gold);
+    color: #000;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    padding: 5px 14px;
+    border-radius: 999px;
+  }
+
+  /* ─── FILTERS ─── */
+  .filters-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 40px;
+  }
+  .filters-inner { max-width: 1400px; margin: 0 auto; }
+
+  .filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 8px; }
+  .filter-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: var(--chip-bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--gold); color: var(--text); }
+  .chip.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--chip-active-text);
+    font-weight: 600;
+  }
+
+  .search-wrap {
+    margin-left: auto;
+    display: flex;
+    align-items: flex-end;
+    padding-bottom: 0;
+  }
+  .search-box {
+    background: var(--chip-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    width: 220px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box::placeholder { color: var(--muted); }
+  .search-box:focus { border-color: var(--gold); }
+
+  .results-bar {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 14px 40px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .results-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+  .sort-select {
+    background: var(--chip-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    outline: none;
+    cursor: pointer;
+  }
+  .sort-select option { background: var(--card); }
+
+  /* ─── GRID ─── */
+  .grid-wrap { max-width: 1400px; margin: 0 auto; padding: 28px 40px 60px; }
+  .movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 22px;
+  }
+
+  /* ─── CARD ─── */
+  .movie-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+    animation: fadeUp 0.4s ease both;
+    position: relative;
+  }
+  .movie-card:hover {
+    transform: translateY(-6px) scale(1.01);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6), 0 0 0 1px var(--gold);
+    border-color: var(--gold);
+    z-index: 2;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .poster-wrap {
+    position: relative;
+    aspect-ratio: 2/3;
+    overflow: hidden;
+    background: #111;
+  }
+  .poster-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+  }
+  .movie-card:hover .poster-wrap img { transform: scale(1.06); }
+
+  .poster-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(10,10,15,0.95) 0%, rgba(10,10,15,0.1) 50%, transparent 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+  }
+  .movie-card:hover .poster-overlay { opacity: 1; }
+  .overlay-genres { display: flex; flex-wrap: wrap; gap: 5px; }
+  .genre-pill {
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(245,197,24,0.18);
+    color: var(--gold);
+    border: 1px solid rgba(245,197,24,0.3);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  .lang-badge {
+    position: absolute;
+    top: 10px; left: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+  .lang-telugu  { background: #1a2a4a; color: #6ab0f5; border: 1px solid #2a3a5a; }
+  .lang-hindi   { background: #2a1a1a; color: #f56a6a; border: 1px solid #3a2a2a; }
+  .lang-tamil   { background: #1a2a1a; color: #6af56a; border: 1px solid #2a3a2a; }
+  .lang-malayalam { background: #2a2a1a; color: #f5f06a; border: 1px solid #3a3a2a; }
+  .lang-english { background: #2a1a2a; color: #c86af5; border: 1px solid #3a2a3a; }
+
+  .rating-badge {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(245,197,24,0.4);
+    border-radius: 6px;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .star-icon { color: var(--gold); font-size: 10px; }
+  .rating-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--gold);
+  }
+
+  .card-body { padding: 14px 14px 16px; }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-meta {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* ─── EMPTY ─── */
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+  .empty-state .emoji { font-size: 48px; margin-bottom: 16px; }
+  .empty-state p { font-size: 16px; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  @media (max-width: 768px) {
+    header { padding: 40px 20px 28px; }
+    .filters-wrap { padding: 14px 20px; }
+    .results-bar { padding: 12px 20px 0; }
+    .grid-wrap { padding: 20px 20px 40px; }
+    .movie-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 14px; }
+    .search-wrap { margin-left: 0; width: 100%; }
+    .search-box { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo-tag">✦ CineVault Collection</div>
+    <h1>Great <span>Cinema</span><br>1990 – 2026</h1>
+    <p class="header-sub">Curated films across Telugu · Hindi · Tamil · Malayalam · English</p>
+    <div class="count-badge" id="headerCount">— films</div>
+  </div>
+</header>
+
+<!-- FILTERS -->
+<div class="filters-wrap">
+  <div class="filters-inner">
+    <div class="filters-row">
+
+      <div class="filter-group">
+        <div class="filter-label">Language</div>
+        <div class="chips" id="langFilter">
+          <div class="chip active" data-val="all">All</div>
+          <div class="chip" data-val="Telugu">Telugu</div>
+          <div class="chip" data-val="Hindi">Hindi</div>
+          <div class="chip" data-val="Tamil">Tamil</div>
+          <div class="chip" data-val="Malayalam">Malayalam</div>
+          <div class="chip" data-val="English">English</div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Decade</div>
+        <div class="chips" id="decadeFilter">
+          <div class="chip active" data-val="all">All</div>
+          <div class="chip" data-val="1990">1990s</div>
+          <div class="chip" data-val="2000">2000s</div>
+          <div class="chip" data-val="2010">2010s</div>
+          <div class="chip" data-val="2020">2020s</div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Genre</div>
+        <div class="chips" id="genreFilter">
+          <div class="chip active" data-val="all">All</div>
+          <div class="chip" data-val="Action">Action</div>
+          <div class="chip" data-val="Drama">Drama</div>
+          <div class="chip" data-val="Thriller">Thriller</div>
+          <div class="chip" data-val="Comedy">Comedy</div>
+          <div class="chip" data-val="Crime">Crime</div>
+          <div class="chip" data-val="Sci-Fi">Sci-Fi</div>
+          <div class="chip" data-val="Romance">Romance</div>
+          <div class="chip" data-val="Horror">Horror</div>
+          <div class="chip" data-val="Fantasy">Fantasy</div>
+          <div class="chip" data-val="Biography">Biography</div>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Min Rating</div>
+        <div class="chips" id="ratingFilter">
+          <div class="chip active" data-val="0">All</div>
+          <div class="chip" data-val="7">7.0+</div>
+          <div class="chip" data-val="7.5">7.5+</div>
+          <div class="chip" data-val="8">8.0+</div>
+          <div class="chip" data-val="8.5">8.5+</div>
+        </div>
+      </div>
+
+      <div class="search-wrap">
+        <input class="search-box" type="text" id="searchBox" placeholder="🔍  Search movies…">
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS BAR -->
+<div class="results-bar">
+  <div class="results-count" id="resultsCount">Loading…</div>
+  <select class="sort-select" id="sortSelect">
+    <option value="rating">Sort: Rating (High→Low)</option>
+    <option value="year_desc">Sort: Year (New→Old)</option>
+    <option value="year_asc">Sort: Year (Old→New)</option>
+    <option value="alpha">Sort: A → Z</option>
+  </select>
+</div>
+
+<!-- GRID -->
+<div class="grid-wrap">
+  <div class="movie-grid" id="movieGrid"></div>
+  <div class="empty-state" id="emptyState">
+    <div class="emoji">🎬</div>
+    <p>No films match your filters. Try adjusting them.</p>
+  </div>
+</div>
+
+<script>
+// ─── DATA ───
+const MOVIES = [
+  // TELUGU
+  { title:"Arjun Reddy", year:2017, lang:"Telugu", genre:["Drama","Romance"], rating:8.2, imdb:"tt6999824", poster:"https://m.media-amazon.com/images/M/MV5BMTU1MjM2ODgwNV5BMl5BanBnXkFtZTgwODEwNzkzNDM@._V1_SX300.jpg" },
+  { title:"Baahubali: The Beginning", year:2015, lang:"Telugu", genre:["Action","Fantasy","Drama"], rating:8.0, imdb:"tt2631186", poster:"https://m.media-amazon.com/images/M/MV5BYWVlMjVhZWYtOGUyNi00ZDQ4LWFlNzYtNTY5NGZjNDJlZTY5XkEyXkFqcGdeQXVyODIwMDI1NjM@._V1_SX300.jpg" },
+  { title:"Baahubali 2: The Conclusion", year:2017, lang:"Telugu", genre:["Action","Fantasy","Drama"], rating:8.2, imdb:"tt4849438", poster:"https://m.media-amazon.com/images/M/MV5BNDMzNGYzOGYtMGZiNS00ZjZlLThjOWUtNmJhNWFlZjhlZjZiXkEyXkFqcGdeQXVyODIwMDI1NjM@._V1_SX300.jpg" },
+  { title:"RRR", year:2022, lang:"Telugu", genre:["Action","Drama"], rating:7.9, imdb:"tt8178634", poster:"https://m.media-amazon.com/images/M/MV5BOGEzYzcxYjAtNzI3ZC00NjEwLTkzOGYtMTEzNWE4YmIxNjA5XkEyXkFqcGdeQXVyMTEyMjM2NDc2._V1_SX300.jpg" },
+  { title:"Pushpa: The Rise", year:2021, lang:"Telugu", genre:["Action","Crime","Drama"], rating:7.6, imdb:"tt9768860", poster:"https://m.media-amazon.com/images/M/MV5BYTZhNWM5MDQtNTg0Zi00Y2NkLWJkNGEtZmNiZTFmNzJlNjI5XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Magadheera", year:2009, lang:"Telugu", genre:["Action","Fantasy","Romance"], rating:7.9, imdb:"tt1072449", poster:"https://m.media-amazon.com/images/M/MV5BMTM0NjAxMzYzN15BMl5BanBnXkFtZTcwNjE1MDI3Mg@@._V1_SX300.jpg" },
+  { title:"Ala Vaikunthapurramuloo", year:2020, lang:"Telugu", genre:["Action","Drama","Comedy"], rating:7.5, imdb:"tt9573982", poster:"https://m.media-amazon.com/images/M/MV5BMWI1NGQ4YmYtNzJhNy00OGQ3LTg2ZTctZDZkZjlmNGViNTI3XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Jersey", year:2019, lang:"Telugu", genre:["Drama","Sport"], rating:8.6, imdb:"tt9174492", poster:"https://m.media-amazon.com/images/M/MV5BYjY1YzY3ZjgtZWNjZS00OWZhLWI4MTYtNWJhMDRiNDY5MWU3XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Mahanati", year:2018, lang:"Telugu", genre:["Biography","Drama","Romance"], rating:8.5, imdb:"tt7016898", poster:"https://m.media-amazon.com/images/M/MV5BOWUxMjM2YjEtODJiMC00MDZlLWJlMzEtMDFjYzY1MDYyZGFlXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Vikram Vedha", year:2017, lang:"Telugu", genre:["Crime","Action","Thriller"], rating:8.4, imdb:"tt6957936", poster:"https://m.media-amazon.com/images/M/MV5BMTU1YjFiNTgtMmNlNS00MWZiLWE4MTItMzhlNDU3ZDliZjJhXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Oopiri", year:2016, lang:"Telugu", genre:["Comedy","Drama"], rating:8.2, imdb:"tt4867478", poster:"https://m.media-amazon.com/images/M/MV5BNTJmNjgxZjYtOGQ5Yy00NGZhLWJmZDAtNDUxMWQzZTQ2ODIwXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Sye Raa Narasimha Reddy", year:2019, lang:"Telugu", genre:["Action","Biography","Drama"], rating:7.0, imdb:"tt8108202", poster:"https://m.media-amazon.com/images/M/MV5BYzg4YjRjMmYtZGE2My00ZTMzLTgzMmQtMjllNWVhNTUwMzEyXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Kalki 2898 AD", year:2024, lang:"Telugu", genre:["Action","Fantasy","Sci-Fi"], rating:6.9, imdb:"tt12735488", poster:"https://m.media-amazon.com/images/M/MV5BZTliMGZlZmMtNDUwMS00NDlmLWI2ODItOGFmNzFiMzBiMzQ2XkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+  { title:"Devara: Part 1", year:2024, lang:"Telugu", genre:["Action","Drama","Thriller"], rating:5.9, imdb:"tt14688458", poster:"https://m.media-amazon.com/images/M/MV5BNWM3ZTMzZWMtN2IwNy00ZTBjLTliZmEtNGFhNjQ1Y2IzODIxXkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+
+  // HINDI
+  { title:"Dilwale Dulhania Le Jayenge", year:1995, lang:"Hindi", genre:["Drama","Romance"], rating:8.1, imdb:"tt0112870", poster:"https://m.media-amazon.com/images/M/MV5BZTNlMjA4ZWItNzU0MS00NmZiLWE5MjQtZTQ3NTQ5OTcxNWIyXkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_SX300.jpg" },
+  { title:"Mughal-E-Azam", year:1960, lang:"Hindi", genre:["Drama","Romance"], rating:8.2, imdb:"tt0054098", poster:"https://m.media-amazon.com/images/M/MV5BNDdiMmJhNzctMzU3Ni00NGZhLTgwYmQtMzZkYTJiNmVhMGE4XkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_SX300.jpg" },
+  { title:"3 Idiots", year:2009, lang:"Hindi", genre:["Comedy","Drama"], rating:8.4, imdb:"tt1187043", poster:"https://m.media-amazon.com/images/M/MV5BNTkyOGVjMGEtNmIzNS00NzFlLWI4NTItNDQ0ZDRhNzNhZTM3XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Lagaan", year:2001, lang:"Hindi", genre:["Drama","Sport"], rating:8.1, imdb:"tt0169102", poster:"https://m.media-amazon.com/images/M/MV5BZTNiMjExZTctMjU5Ni00Y2YyLWFlYzItN2I4YzU4ZmYxYzI2XkEyXkFqcGdeQXVyNjc1NTYyMjg@._V1_SX300.jpg" },
+  { title:"Gangs of Wasseypur", year:2012, lang:"Hindi", genre:["Crime","Drama","Action"], rating:8.2, imdb:"tt1954470", poster:"https://m.media-amazon.com/images/M/MV5BZGExMTM3MzYtYTU5MC00MDhhLThlZTAtMDI2YTZlMGVlNWU0XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Andhadhun", year:2018, lang:"Hindi", genre:["Crime","Thriller","Drama"], rating:8.2, imdb:"tt8108432", poster:"https://m.media-amazon.com/images/M/MV5BZWZhYjFkMTItZDQwNi00MTIwLTljOTgtNDYyMzlkMjBhYjhlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Article 15", year:2019, lang:"Hindi", genre:["Crime","Drama","Thriller"], rating:8.1, imdb:"tt9476562", poster:"https://m.media-amazon.com/images/M/MV5BOWNlYTljNmYtNzAyMi00NGM2LWJiMjgtNmIzNjlmYzlmYzFmXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Taare Zameen Par", year:2007, lang:"Hindi", genre:["Drama"], rating:8.4, imdb:"tt0986264", poster:"https://m.media-amazon.com/images/M/MV5BMDhjZWViN2ItNzAxZC00NTY3LWJiODYtYzQ3MTYzYjNkMGY2XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Dil Chahta Hai", year:2001, lang:"Hindi", genre:["Comedy","Drama","Romance"], rating:8.1, imdb:"tt0292490", poster:"https://m.media-amazon.com/images/M/MV5BMTQ4MzE2NDE3OF5BMl5BanBnXkFtZTcwNjM0NjMzMQ@@._V1_SX300.jpg" },
+  { title:"Rockstar", year:2011, lang:"Hindi", genre:["Drama","Music","Romance"], rating:7.9, imdb:"tt1839596", poster:"https://m.media-amazon.com/images/M/MV5BNDM2NzI5NjgtODlmMi00NGZlLWJjMWQtY2U1MWNlMjU5ZjY5XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Dangal", year:2016, lang:"Hindi", genre:["Biography","Drama","Sport"], rating:8.3, imdb:"tt5074352", poster:"https://m.media-amazon.com/images/M/MV5BMTQ4MzE3NTAyMl5BMl5BanBnXkFtZTgwNzQ4OTI2OTE@._V1_SX300.jpg" },
+  { title:"Tumbbad", year:2018, lang:"Hindi", genre:["Fantasy","Horror","Thriller"], rating:8.2, imdb:"tt8239946", poster:"https://m.media-amazon.com/images/M/MV5BYmQ4YWMxYjUtNjZmYi00MDdmLWIzZDMtZTJmZWIxNjFmNmMyXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Kahani", year:2012, lang:"Hindi", genre:["Thriller","Drama"], rating:8.1, imdb:"tt1821480", poster:"https://m.media-amazon.com/images/M/MV5BMTUxNTg5MzU5MV5BMl5BanBnXkFtZTcwNjM4NzgwNw@@._V1_SX300.jpg" },
+  { title:"Black Friday", year:2004, lang:"Hindi", genre:["Crime","Drama","Thriller"], rating:8.5, imdb:"tt0375611", poster:"https://m.media-amazon.com/images/M/MV5BODIyMWMxMzUtNGFiNi00YTY3LWI2YTAtYWVmZGU3OGZiNTMxXkEyXkFqcGdeQXVyODUxNjM3OTY@._V1_SX300.jpg" },
+  { title:"Gulaal", year:2009, lang:"Hindi", genre:["Drama","Thriller"], rating:8.1, imdb:"tt1259390", poster:"https://m.media-amazon.com/images/M/MV5BMTQ2MjY3NTI2Ml5BMl5BanBnXkFtZTcwOTcwNjA3Mg@@._V1_SX300.jpg" },
+  { title:"Animal", year:2023, lang:"Hindi", genre:["Action","Crime","Drama"], rating:6.8, imdb:"tt13751694", poster:"https://m.media-amazon.com/images/M/MV5BNDE3MjgyZjEtMDk1Ni00Y2RmLTk5MTEtNTk5NWI5MzZkNzc3XkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+
+  // TAMIL
+  { title:"Vikram", year:2022, lang:"Tamil", genre:["Action","Thriller","Crime"], rating:7.7, imdb:"tt10370710", poster:"https://m.media-amazon.com/images/M/MV5BNDZiNzZiNjMtMzI4Ni00ZDZjLWIzZTMtYTFjNmFlNzJmOGVhXkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+  { title:"Kaithi", year:2019, lang:"Tamil", genre:["Action","Thriller"], rating:8.5, imdb:"tt10065794", poster:"https://m.media-amazon.com/images/M/MV5BZDVkNmE4ZWQtN2FjMi00ZWZlLWI5YzEtZTgzNjBkNzIyMTljXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Soorarai Pottru", year:2020, lang:"Tamil", genre:["Biography","Drama"], rating:8.7, imdb:"tt7146798", poster:"https://m.media-amazon.com/images/M/MV5BMzk4ZTYyNjItMTU3Ni00YWRmLWEzMGQtNzM4NzRkMDNjMWFjXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Pariyerum Perumal", year:2018, lang:"Tamil", genre:["Drama"], rating:8.6, imdb:"tt8108510", poster:"https://m.media-amazon.com/images/M/MV5BYjkwMGU4MzQtMTdiNy00NjVhLWI5NTYtNGYxMGIwOWVkY2Q5XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Ratsasan", year:2018, lang:"Tamil", genre:["Crime","Horror","Thriller"], rating:8.5, imdb:"tt8648388", poster:"https://m.media-amazon.com/images/M/MV5BNGE0OGQxMjUtMDliOC00MGYyLThkNjAtNGU5ODZlMTg0MzQxXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Karnan", year:2021, lang:"Tamil", genre:["Action","Drama"], rating:8.2, imdb:"tt11920790", poster:"https://m.media-amazon.com/images/M/MV5BZDhmNmRjZGQtMGQyMC00MzdkLTllMGMtMTY2NjI3ZGRhMTZiXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Jai Bhim", year:2021, lang:"Tamil", genre:["Crime","Drama","Thriller"], rating:8.8, imdb:"tt15097216", poster:"https://m.media-amazon.com/images/M/MV5BOGQ5YzM5OTMtYTMwOS00MzA2LTgwMTctNTgxZWVhNGQ2ZTJmXkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+  { title:"Master", year:2021, lang:"Tamil", genre:["Action","Thriller","Drama"], rating:7.3, imdb:"tt9900782", poster:"https://m.media-amazon.com/images/M/MV5BZGJiN2U4YzMtMjZiNi00MzgwLTgyZGMtMjRhYTY1NjkwZTRiXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"96", year:2018, lang:"Tamil", genre:["Drama","Romance"], rating:8.5, imdb:"tt8108242", poster:"https://m.media-amazon.com/images/M/MV5BYzdkMjVhNjEtYWFmZS00ZGIzLWE4Y2ItMzkyZGRlYmQxNmE4XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Mersal", year:2017, lang:"Tamil", genre:["Action","Drama"], rating:7.6, imdb:"tt7097528", poster:"https://m.media-amazon.com/images/M/MV5BOWRhYTc3MzYtYjk5My00ODMzLTg0NjQtYjc3ZTE1MWZkNzFhXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Vettaikaaran", year:2009, lang:"Tamil", genre:["Action","Crime"], rating:7.5, imdb:"tt1494720", poster:"https://m.media-amazon.com/images/M/MV5BMTQ5MDc2NjUtODM1OS00ZjU4LWFlZGItZDI3M2ZkMGExMTNhXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Ponniyin Selvan: Part 1", year:2022, lang:"Tamil", genre:["Action","Drama","Fantasy"], rating:7.6, imdb:"tt10855768", poster:"https://m.media-amazon.com/images/M/MV5BNzJiZmI5ZGYtNTU5Yi00MGNlLWEwMzQtN2ZhMDI4YWZiYTI1XkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+  { title:"Leo", year:2023, lang:"Tamil", genre:["Action","Crime","Thriller"], rating:6.8, imdb:"tt14768620", poster:"https://m.media-amazon.com/images/M/MV5BNTM3MDhlMzYtNjc1ZS00OThmLTg3MWEtMWFiOWJjYzY3NWNkXkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+  { title:"Kabali", year:2016, lang:"Tamil", genre:["Action","Drama","Crime"], rating:6.7, imdb:"tt4824398", poster:"https://m.media-amazon.com/images/M/MV5BNjgzMDhhMjItODg4MS00YzNlLWIzMDQtOTgzNzY5NzljOTZmXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+
+  // MALAYALAM
+  { title:"Drishyam", year:2013, lang:"Malayalam", genre:["Crime","Drama","Thriller"], rating:8.4, imdb:"tt3417836", poster:"https://m.media-amazon.com/images/M/MV5BODRmNTZiNGUtNTM1OS00MjJhLWIzMWYtYzM1YTliNjA1YjJkXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Kumbalangi Nights", year:2019, lang:"Malayalam", genre:["Drama","Romance"], rating:8.5, imdb:"tt9472822", poster:"https://m.media-amazon.com/images/M/MV5BOGI3ZTdjN2MtOTFmNi00MmI1LWIyYjUtMzFjZGJhN2I4NDEyXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg" },
+  { title:"Lucifer", year:2019, lang:"Malayalam", genre:["Action","Crime","Thriller"], rating:7.7, imdb:"tt9472998", poster:"https://m.media-amazon.com/images/M/MV5BOTdiNzY1ZTYtNWE4Ni00ZGRkLTkxNzctM2FkOTIxYWJhM2ZhXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Premam", year:2015, lang:"Malayalam", genre:["Romance","Drama","Comedy"], rating:8.3, imdb:"tt4609856", poster:"https://m.media-amazon.com/images/M/MV5BNWY1YjViMmUtMGI0OS00MWZkLWI0NmMtNmEwNGRmYzNmYzljXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Bangalore Days", year:2014, lang:"Malayalam", genre:["Drama","Romance","Comedy"], rating:8.2, imdb:"tt3942284", poster:"https://m.media-amazon.com/images/M/MV5BYTY3ZWM4YWYtOWY3ZC00MzE1LTgyYzYtMTFiMDI5MDliZjgxXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Angamaly Diaries", year:2017, lang:"Malayalam", genre:["Crime","Drama"], rating:8.3, imdb:"tt6596012", poster:"https://m.media-amazon.com/images/M/MV5BZGZlMmNlNTItNGU1My00YjJkLWEwNjAtZGJlMjY0YjZlYjEzXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Virus", year:2019, lang:"Malayalam", genre:["Drama","Thriller"], rating:8.4, imdb:"tt9517914", poster:"https://m.media-amazon.com/images/M/MV5BMmY4MDM4NTYtMzYwOS00YTcyLWE0OTMtMzBlNzA0NGViODM4XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Jallikattu", year:2019, lang:"Malayalam", genre:["Action","Drama","Thriller"], rating:7.7, imdb:"tt11077682", poster:"https://m.media-amazon.com/images/M/MV5BMTFlMzM5MjMtNGU0MC00OThhLThlNzQtZGMxMmE0NzJhODNiXkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX300.jpg" },
+  { title:"2018: Everyone is a Hero", year:2023, lang:"Malayalam", genre:["Drama","Thriller"], rating:8.7, imdb:"tt18108220", poster:"https://m.media-amazon.com/images/M/MV5BNjNiNDA2NmYtMDliNi00ZDU3LWFhOGYtM2VmMjExMDVlODI1XkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+  { title:"Manichithrathazhu", year:1993, lang:"Malayalam", genre:["Horror","Thriller","Drama"], rating:8.2, imdb:"tt0107712", poster:"https://m.media-amazon.com/images/M/MV5BMWNlZDM0NDYtOWJhNi00ZjVhLWI5MzEtN2ZhNjZlNTkwMGJjXkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Minnal Murali", year:2021, lang:"Malayalam", genre:["Action","Comedy","Fantasy"], rating:7.6, imdb:"tt12365128", poster:"https://m.media-amazon.com/images/M/MV5BZjc4MzA0OTktMWY5Mi00ZTQ2LTg2ZTItNmJiNmYxNzBlNDE0XkEyXkFqcGdeQXVyODE5NzE3OTE@._V1_SX300.jpg" },
+  { title:"Aavesham", year:2024, lang:"Malayalam", genre:["Action","Comedy","Crime"], rating:8.3, imdb:"tt28454360", poster:"https://m.media-amazon.com/images/M/MV5BMmY4MjA2OTgtMmExMS00OGUzLWJhYmYtZWRiMWNhM2Q1YTg5XkEyXkFqcGdeQXVyMTUzNTgzNzM0._V1_SX300.jpg" },
+
+  // ENGLISH
+  { title:"The Shawshank Redemption", year:1994, lang:"English", genre:["Drama"], rating:9.3, imdb:"tt0111161", poster:"https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NiYyLTg3ZmItYzM2ZTY3OWZiM2IzXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_SX300.jpg" },
+  { title:"The Godfather", year:1972, lang:"English", genre:["Crime","Drama"], rating:9.2, imdb:"tt0068646", poster:"https://m.media-amazon.com/images/M/MV5BM2MyNjYxNmUtYTAwNi00MTYxLWJmNWYtYzZlODY3ZTk3OTFlXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg" },
+  { title:"The Dark Knight", year:2008, lang:"English", genre:["Action","Crime","Drama"], rating:9.0, imdb:"tt0468569", poster:"https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX300.jpg" },
+  { title:"Inception", year:2010, lang:"English", genre:["Action","Sci-Fi","Thriller"], rating:8.8, imdb:"tt1375666", poster:"https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg" },
+  { title:"Interstellar", year:2014, lang:"English", genre:["Drama","Sci-Fi","Thriller"], rating:8.7, imdb:"tt0816692", poster:"https://m.media-amazon.com/images/M/MV5BZjdkOTU3MDktN2IxOS00OGEyLWFmMjktY2FiMmZkNWIyODZiXkEyXkFqcGdeQXVyMTMxODk2OTU@._V1_SX300.jpg" },
+  { title:"Pulp Fiction", year:1994, lang:"English", genre:["Crime","Drama"], rating:8.9, imdb:"tt0110912", poster:"https://m.media-amazon.com/images/M/MV5BNGNhMDIzZTUtNTBlZi00MTRlLWFjM2ItYzViMjE3YzI5MjljXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg" },
+  { title:"Parasite", year:2019, lang:"English", genre:["Comedy","Drama","Thriller"], rating:8.5, imdb:"tt6751668", poster:"https://m.media-amazon.com/images/M/MV5BYWZjMjk3ZTItODQ2ZC00NTY5LWE0ZDYtZTI3MjcwN2Q5NTVkXkEyXkFqcGdeQXVyODk4OTc3MTY@._V1_SX300.jpg" },
+  { title:"Oppenheimer", year:2023, lang:"English", genre:["Biography","Drama","Thriller"], rating:8.3, imdb:"tt15398776", poster:"https://m.media-amazon.com/images/M/MV5BMDBmYTZjNjUtN2M1MS00MTQ2LTk2ODgtNzc2M2QyZGE5NTVjXkEyXkFqcGdeQXVyNzAwMjU2MTY@._V1_SX300.jpg" },
+  { title:"Dune: Part One", year:2021, lang:"English", genre:["Action","Drama","Sci-Fi"], rating:8.0, imdb:"tt1160419", poster:"https://m.media-amazon.com/images/M/MV5BN2FjNmEyNWMtYzM0ZS00NjIyLTg2YzYtYTU2NjE3MTFiMGQ0XkEyXkFqcGdeQXVyMTkxNjUyNQ@@._V1_SX300.jpg" },
+  { title:"Everything Everywhere All at Once", year:2022, lang:"English", genre:["Action","Comedy","Sci-Fi"], rating:7.8, imdb:"tt6710474", poster:"https://m.media-amazon.com/images/M/MV5BYTdiOTIyZTQtNmQ1OS00NjZlLWIyMTgtYzk5Y2M3ZDVaMDE1XkEyXkFqcGdeQXVyMTAyOTE2ODg0._V1_SX300.jpg" },
+  { title:"No Country for Old Men", year:2007, lang:"English", genre:["Crime","Drama","Thriller"], rating:8.2, imdb:"tt0477348", poster:"https://m.media-amazon.com/images/M/MV5BMjA5Njk3MjM4OV5BMl5BanBnXkFtZTcwMTc5MTE1MQ@@._V1_SX300.jpg" },
+  { title:"There Will Be Blood", year:2007, lang:"English", genre:["Drama"], rating:8.2, imdb:"tt0469494", poster:"https://m.media-amazon.com/images/M/MV5BMjAxODQ4MDU5NV5BMl5BanBnXkFtZTcwMDU4MjM1MQ@@._V1_SX300.jpg" },
+  { title:"The Matrix", year:1999, lang:"English", genre:["Action","Sci-Fi"], rating:8.7, imdb:"tt0133093", poster:"https://m.media-amazon.com/images/M/MV5BNzQzOTk3OTAtNDQ0Zi00ZTVkLWI0MTEtMDllZjNkYzNjNTc3XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Goodfellas", year:1990, lang:"English", genre:["Biography","Crime","Drama"], rating:8.7, imdb:"tt0099685", poster:"https://m.media-amazon.com/images/M/MV5BY2NkZjEzMDgtN2RjYy00YzM1LWI4ZmQtMjIwYjFjNmI3ZGEwXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg" },
+  { title:"Schindler's List", year:1993, lang:"English", genre:["Biography","Drama","History"], rating:9.0, imdb:"tt0108052", poster:"https://m.media-amazon.com/images/M/MV5BNDE4OTEyMDYtZmE5My00NjA0LWI1MTctNzM3NDQ3NWI5ZjkxXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Fight Club", year:1999, lang:"English", genre:["Drama"], rating:8.8, imdb:"tt0137523", poster:"https://m.media-amazon.com/images/M/MV5BMmEzNTkxYjQtZTc0MC00YTVjLTg5ZTEtZWMwOWVlYzY0NWIwXkEyXkFqcGdeQXVyNzkwMjQ5NzM@._V1_SX300.jpg" },
+  { title:"Avengers: Endgame", year:2019, lang:"English", genre:["Action","Drama","Sci-Fi"], rating:8.4, imdb:"tt4154796", poster:"https://m.media-amazon.com/images/M/MV5BMTc5MDE2ODcwNV5BMl5BanBnXkFtZTgwMzI2NzQ2NzM@._V1_SX300.jpg" },
+  { title:"The Silence of the Lambs", year:1991, lang:"English", genre:["Crime","Drama","Horror"], rating:8.6, imdb:"tt0102926", poster:"https://m.media-amazon.com/images/M/MV5BNjNhZTk0ZmEtNjJhMi00YzFlLWE1MmEtYzM1M2ZmMGMwMTU4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+  { title:"Forrest Gump", year:1994, lang:"English", genre:["Drama","Romance"], rating:8.8, imdb:"tt0109830", poster:"https://m.media-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg" },
+  { title:"The Prestige", year:2006, lang:"English", genre:["Drama","Mystery","Sci-Fi"], rating:8.5, imdb:"tt0482571", poster:"https://m.media-amazon.com/images/M/MV5BMjA4NDI0MTIxNF5BMl5BanBnXkFtZTYwNTM0MzY2._V1_SX300.jpg" },
+  { title:"Gladiator", year:2000, lang:"English", genre:["Action","Drama"], rating:8.5, imdb:"tt0172495", poster:"https://m.media-amazon.com/images/M/MV5BMDliMmNhNDctNDI5Mi00NjkxLTk2ODItZjc3NTEwYjBhNjA5XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1_SX300.jpg" },
+];
+
+// ─── STATE ───
+let filters = { lang: 'all', decade: 'all', genre: 'all', rating: 0 };
+let searchQuery = '';
+let sortBy = 'rating';
+
+// ─── FILTER CHIPS ───
+function initChips(containerId, key) {
+  const container = document.getElementById(containerId);
+  container.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      container.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      const val = chip.dataset.val;
+      filters[key] = key === 'rating' ? parseFloat(val) : val;
+      render();
+    });
+  });
+}
+initChips('langFilter', 'lang');
+initChips('decadeFilter', 'decade');
+initChips('genreFilter', 'genre');
+initChips('ratingFilter', 'rating');
+
+document.getElementById('searchBox').addEventListener('input', e => {
+  searchQuery = e.target.value.toLowerCase();
+  render();
+});
+
+document.getElementById('sortSelect').addEventListener('change', e => {
+  sortBy = e.target.value;
+  render();
+});
+
+// ─── FILTER + SORT ───
+function filtered() {
+  return MOVIES.filter(m => {
+    if (filters.lang !== 'all' && m.lang !== filters.lang) return false;
+    if (filters.decade !== 'all') {
+      const d = parseInt(filters.decade);
+      if (m.year < d || m.year >= d + 10) return false;
+    }
+    if (filters.genre !== 'all' && !m.genre.includes(filters.genre)) return false;
+    if (m.rating < filters.rating) return false;
+    if (searchQuery && !m.title.toLowerCase().includes(searchQuery)) return false;
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === 'rating') return b.rating - a.rating;
+    if (sortBy === 'year_desc') return b.year - a.year;
+    if (sortBy === 'year_asc') return a.year - b.year;
+    if (sortBy === 'alpha') return a.title.localeCompare(b.title);
+    return 0;
+  });
+}
+
+// ─── RENDER ───
+function render() {
+  const movies = filtered();
+  const grid = document.getElementById('movieGrid');
+  const empty = document.getElementById('emptyState');
+
+  document.getElementById('resultsCount').textContent = `${movies.length} film${movies.length !== 1 ? 's' : ''} found`;
+  document.getElementById('headerCount').textContent = `${movies.length} films`;
+
+  if (movies.length === 0) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  grid.innerHTML = movies.map((m, i) => `
+    <div class="movie-card" style="animation-delay:${Math.min(i * 0.04, 0.8)}s"
+         onclick="window.open('https://www.imdb.com/title/${m.imdb}','_blank')">
+      <div class="poster-wrap">
+        <img src="${m.poster}" alt="${m.title}" loading="lazy"
+             onerror="this.src='https://via.placeholder.com/200x300/1a1a26/7a7a9a?text=${encodeURIComponent(m.title)}'">
+        <div class="lang-badge lang-${m.lang.toLowerCase()}">${m.lang}</div>
+        <div class="rating-badge">
+          <span class="star-icon">★</span>
+          <span class="rating-num">${m.rating.toFixed(1)}</span>
+        </div>
+        <div class="poster-overlay">
+          <div class="overlay-genres">
+            ${m.genre.map(g => `<span class="genre-pill">${g}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-title">${m.title}</div>
+        <div class="card-meta">${m.year}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+render();
+</script>
+</body>
+</html>

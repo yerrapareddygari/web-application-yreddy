@@ -153,24 +153,24 @@ h1 em{color:var(--gold);font-style:normal}
 .mtab-panel.active{display:block}
 /* POSTER GALLERY */
 .mgallery{display:flex;gap:10px;flex-wrap:wrap}
-.mgallery img{height:160px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .2s,transform .2s;object-fit:cover}
+.mgallery img{height:180px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .2s,transform .2s;object-fit:cover}
 .mgallery img:hover{border-color:var(--gold);transform:scale(1.03)}
 /* LIGHTBOX */
 .lbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;align-items:center;justify-content:center}
 .lbox.open{display:flex}
 .lbox img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.8)}
 .lbox-close{position:absolute;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer;background:none;border:none;line-height:1}
-/* TRAILER */
+/* TRAILER / SONGS EMBED */
 .yt-wrap{position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;background:#000}
 .yt-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
-.yt-search-hint{font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
-/* SONGS */
-.songs-links{display:flex;flex-direction:column;gap:10px}
-.song-link{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border-light);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .2s}
-.song-link:hover{border-color:var(--gold)}
-.song-link .sli{font-size:20px}
-.song-link .slt{font-size:13px;font-weight:500}
-.song-link .sls{font-size:11px;color:var(--muted)}
+.yt-hint{font-size:11px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.yt-hint a{color:var(--gold);text-decoration:none;font-size:11px}
+.yt-vid-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.yt-vid-item{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--surface);border:1px solid var(--border-light);border-radius:7px;cursor:pointer;transition:border-color .2s}
+.yt-vid-item:hover{border-color:var(--gold)}
+.yt-vid-item img{width:80px;height:45px;object-fit:cover;border-radius:4px;flex-shrink:0}
+.yt-vid-item .vt{font-size:12px;font-weight:500;line-height:1.4;color:var(--text)}
+.yt-vid-item .vc{font-size:10px;color:var(--muted);margin-top:2px}
 
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -321,11 +321,14 @@ header{padding:32px 20px 24px}
         <div class="mgallery" id="galleryGrid"></div>
       </div>
       <div class="mtab-panel" id="mpTrailer">
-        <div class="yt-search-hint" id="ytHint"></div>
+        <div class="yt-hint"><span id="ytHint"></span></div>
         <div class="yt-wrap" id="ytWrap"></div>
+        <div class="yt-vid-list" id="ytList"></div>
       </div>
       <div class="mtab-panel" id="mpSongs">
-        <div class="songs-links" id="songsLinks"></div>
+        <div class="yt-hint"><span id="songsHint"></span></div>
+        <div class="yt-wrap" id="songsWrap"></div>
+        <div class="yt-vid-list" id="songsList"></div>
       </div>
     </div>
   </div>
@@ -544,6 +547,17 @@ initChips('ratingChips','rating');
 
 // Modal
 var currentModalMovie = null;
+var ytApiReady = false;
+var ytPlayer = null;
+var ytSongsPlayer = null;
+
+// Load YouTube IFrame API once
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+})();
+window.onYouTubeIframeAPIReady = function(){ ytApiReady = true; };
 
 async function openModal(imdbId){
   document.getElementById('modal').classList.add('open');
@@ -580,53 +594,113 @@ async function openModal(imdbId){
     +'<a class="bimdb" href="https://www.imdb.com/title/'+m.imdbId+'/" target="_blank">View on IMDB ↗</a>'
     +'<button class="bclose" onclick="closeModalDirect()">Close</button>'
     +'</div></div>';
-
-  // Show media section
   document.getElementById('modalMedia').style.display = 'block';
-  // Reset to gallery tab
-  switchMTab('gallery', document.querySelector('.mtab-btn'));
+  // reset tabs
+  document.querySelectorAll('.mtab-btn').forEach(function(b,i){ b.classList.toggle('active',i===0); });
+  document.querySelectorAll('.mtab-panel').forEach(function(p,i){ p.classList.toggle('active',i===0); });
+  document.getElementById('ytWrap').innerHTML = '';
+  document.getElementById('songsWrap').innerHTML = '';
+  document.getElementById('ytList').innerHTML = '';
+  document.getElementById('songsList').innerHTML = '';
   loadGallery(m);
 }
 
 function loadGallery(m){
   var grid = document.getElementById('galleryGrid');
-  // Show main poster + IMDB photos link
-  var imgs = [];
-  if(m.poster) imgs.push(m.poster);
-  // Generate alternate size poster URLs from OMDB (SX300, SX500, SX700)
-  if(m.poster){
-    imgs.push(m.poster.replace(/_SX\d+/, '_SX500'));
-    imgs.push(m.poster.replace(/_SX\d+/, '_SX700'));
-    imgs.push(m.poster.replace(/_SX\d+/, '_SX300'));
-  }
-  // Deduplicate
+  if(!m.poster){ grid.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:20px">No images available.</div>'; return; }
+  // OMDB poster comes as e.g. https://m.media-amazon.com/images/M/xxx._V1_SX300.jpg
+  // We generate multiple crops/sizes from the same base URL
+  var base = m.poster.replace(/\._V1_.*\.jpg$/, '');
+  var sizes = [
+    {w:300,h:444,label:'Poster'},
+    {w:500,h:740,label:'Medium'},
+    {w:700,h:1036,label:'Large'},
+    {w:182,h:268,label:'Thumb'},
+    {w:400,h:592,label:'Wide'}
+  ];
+  var imgs = sizes.map(function(s){
+    return base+'._V1_UX'+s.w+'_CR0,0,'+s.w+','+s.h+'_AL_.jpg';
+  });
+  // Also add original
+  imgs.unshift(m.poster);
   imgs = imgs.filter(function(v,i,a){ return a.indexOf(v)===i; });
   grid.innerHTML = imgs.map(function(src){
-    return '<img src="'+src+'" alt="poster" onerror="this.style.display=\'none\'" onclick="openLightbox(\''+src+'\')">';
-  }).join('')
-  + '<a href="https://www.imdb.com/title/'+m.imdbId+'/mediaindex" target="_blank" style="display:flex;align-items:center;justify-content:center;height:160px;min-width:100px;background:var(--surface);border:1px dashed var(--border-light);border-radius:6px;color:var(--gold);font-size:12px;text-decoration:none;font-family:JetBrains Mono,monospace;padding:10px;text-align:center">📷 More on IMDB ↗</a>';
+    var safe = src.replace(/'/g,"\\'");
+    return '<img src="'+src+'" alt="poster" loading="lazy" onerror="this.style.display=\'none\'" onclick="openLightbox(\''+safe+'\')">';
+  }).join('');
 }
 
-function loadTrailer(m){
-  var q = encodeURIComponent(m.title+' '+m.year+' official trailer');
-  document.getElementById('ytHint').textContent = 'Searching YouTube for: '+m.title+' trailer';
-  // Embed YouTube search — opens in iframe via YouTube search embed
-  document.getElementById('ytWrap').innerHTML =
-    '<iframe src="https://www.youtube.com/embed?listType=search&list='+q+'" allowfullscreen allow="autoplay; encrypted-media"></iframe>';
+async function loadTrailer(m){
+  var wrap = document.getElementById('ytWrap');
+  var list = document.getElementById('ytList');
+  var hint = document.getElementById('ytHint');
+  var q = m.title+' '+m.year+' official trailer';
+  hint.textContent = '🔍 Searching: '+q;
+  wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-family:JetBrains Mono,monospace">Loading…</div>';
+  // Use YouTube oEmbed-compatible noembed to get video ID
+  var videos = await searchYouTube(q);
+  if(!videos.length){
+    wrap.innerHTML = '';
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">No trailer found. <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(q)+'" target="_blank" style="color:var(--gold)">Search on YouTube ↗</a></div>';
+    return;
+  }
+  // Auto-play first result
+  playYT(videos[0].id, wrap);
+  // Show list of results
+  list.innerHTML = videos.map(function(v,i){
+    return '<div class="yt-vid-item" onclick="playYT(\''+v.id+'\',document.getElementById(\'ytWrap\'))" style="'+(i===0?'border-color:var(--gold)':'')+'">'
+      +'<img src="https://img.youtube.com/vi/'+v.id+'/mqdefault.jpg" alt="">'
+      +'<div><div class="vt">'+esc(v.title)+'</div><div class="vc">'+esc(v.channel)+'</div></div></div>';
+  }).join('');
 }
 
-function loadSongs(m){
-  var q = encodeURIComponent(m.title+' '+m.year);
-  var ytQ = encodeURIComponent(m.title+' '+m.year+' songs jukebox');
-  document.getElementById('songsLinks').innerHTML =
-    '<a class="song-link" href="https://www.youtube.com/results?search_query='+ytQ+'" target="_blank">'
-    +'<span class="sli">▶</span><div><div class="slt">YouTube — Songs / Jukebox</div><div class="sls">Search "'+m.title+' songs jukebox" on YouTube</div></div></a>'
-    +'<a class="song-link" href="https://open.spotify.com/search/'+q+'" target="_blank">'
-    +'<span class="sli">🎧</span><div><div class="slt">Spotify — Soundtrack</div><div class="sls">Search on Spotify</div></div></a>'
-    +'<a class="song-link" href="https://music.youtube.com/search?q='+q+'" target="_blank">'
-    +'<span class="sli">🎵</span><div><div class="slt">YouTube Music</div><div class="sls">Search on YouTube Music</div></div></a>'
-    +'<a class="song-link" href="https://www.jiosaavn.com/search/'+q+'" target="_blank">'
-    +'<span class="sli">🎶</span><div><div class="slt">JioSaavn</div><div class="sls">Search on JioSaavn</div></div></a>';
+async function loadSongs(m){
+  var wrap = document.getElementById('songsWrap');
+  var list = document.getElementById('songsList');
+  var hint = document.getElementById('songsHint');
+  var q = m.title+' '+m.year+' songs jukebox';
+  hint.textContent = '🎵 Searching: '+q;
+  wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-family:JetBrains Mono,monospace">Loading…</div>';
+  var videos = await searchYouTube(q);
+  if(!videos.length){
+    wrap.innerHTML = '';
+    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">No songs found. <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(q)+'" target="_blank" style="color:var(--gold)">Search on YouTube ↗</a></div>';
+    return;
+  }
+  playYT(videos[0].id, wrap);
+  list.innerHTML = videos.map(function(v,i){
+    return '<div class="yt-vid-item" onclick="playYT(\''+v.id+'\',document.getElementById(\'songsWrap\'))" style="'+(i===0?'border-color:var(--gold)':'')+'">'
+      +'<img src="https://img.youtube.com/vi/'+v.id+'/mqdefault.jpg" alt="">'
+      +'<div><div class="vt">'+esc(v.title)+'</div><div class="vc">'+esc(v.channel)+'</div></div></div>';
+  }).join('');
+}
+
+// Fetch YouTube video IDs using the public YouTube search page via a CORS proxy
+async function searchYouTube(query){
+  try{
+    // Use youtube-search-results via noembed / invidious public API (no key needed)
+    var inv = 'https://inv.nadeko.net'; // public Invidious instance
+    var r = await fetch(inv+'/api/v1/search?q='+encodeURIComponent(query)+'&type=video&fields=videoId,title,author');
+    if(!r.ok) throw new Error();
+    var data = await r.json();
+    return (data||[]).slice(0,6).map(function(v){
+      return {id:v.videoId, title:v.title, channel:v.author};
+    });
+  } catch(e){
+    // fallback: try another public Invidious instance
+    try{
+      var r2 = await fetch('https://invidious.privacydev.net/api/v1/search?q='+encodeURIComponent(query)+'&type=video&fields=videoId,title,author');
+      if(!r2.ok) throw new Error();
+      var data2 = await r2.json();
+      return (data2||[]).slice(0,6).map(function(v){
+        return {id:v.videoId, title:v.title, channel:v.author};
+      });
+    } catch(e2){ return []; }
+  }
+}
+
+function playYT(videoId, wrapEl){
+  wrapEl.innerHTML = '<iframe src="https://www.youtube.com/embed/'+videoId+'?autoplay=1&rel=0" allowfullscreen allow="autoplay; encrypted-media; picture-in-picture"></iframe>';
 }
 
 function switchMTab(tab, btn){
@@ -636,8 +710,8 @@ function switchMTab(tab, btn){
   var panels = {gallery:'mpGallery', trailer:'mpTrailer', songs:'mpSongs'};
   document.getElementById(panels[tab]).classList.add('active');
   if(!currentModalMovie) return;
-  if(tab==='trailer') loadTrailer(currentModalMovie);
-  if(tab==='songs') loadSongs(currentModalMovie);
+  if(tab==='trailer' && !document.getElementById('ytList').innerHTML) loadTrailer(currentModalMovie);
+  if(tab==='songs' && !document.getElementById('songsList').innerHTML) loadSongs(currentModalMovie);
 }
 
 function openLightbox(src){
@@ -648,9 +722,15 @@ function openLightbox(src){
 function closeModal(e){ if(e.target === document.getElementById('modal')) closeModalDirect(); }
 function closeModalDirect(){
   document.getElementById('modal').classList.remove('open');
-  document.getElementById('ytWrap').innerHTML = ''; // stop video
+  document.getElementById('ytWrap').innerHTML = '';
+  document.getElementById('songsWrap').innerHTML = '';
 }
-document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeModalDirect(); document.getElementById('lbox').classList.remove('open'); } });
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){
+    closeModalDirect();
+    document.getElementById('lbox').classList.remove('open');
+  }
+});
 </script>
 </body>
 </html>

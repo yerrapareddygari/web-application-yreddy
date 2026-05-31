@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Movie Website — Live IMDB Search</title>
+<title>CineVault — Live IMDB Search</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#060609;--surface:#0e0e16;--card:#13131e;--border:#1f1f30;--border-light:#2a2a40;--gold:#f5c518;--gold2:#e8b400;--red:#e8463a;--text:#eeeef5;--muted:#666680;--muted2:#9090aa;--radius:10px}
@@ -116,12 +116,12 @@ h1 em{color:var(--gold);font-style:normal}
 /* MODAL */
 .mbg{position:fixed;inset:0;background:rgba(0,0,0,.87);backdrop-filter:blur(10px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px}
 .mbg.open{display:flex}
-.modal{background:var(--card);border:1px solid var(--border-light);border-radius:16px;max-width:680px;width:100%;max-height:90vh;overflow-y:auto;position:relative;animation:min .25s ease}
+.modal{background:var(--card);border:1px solid var(--border-light);border-radius:16px;max-width:780px;width:100%;max-height:90vh;overflow-y:auto;position:relative;animation:min .25s ease}
 @keyframes min{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:none}}
 .mclose{position:absolute;top:13px;right:13px;width:30px;height:30px;background:var(--border);border:none;border-radius:50%;color:var(--text);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;z-index:1}
 .mclose:hover{background:var(--red)}
 .mi{display:flex;gap:0}
-.mp{width:190px;flex-shrink:0;border-radius:14px 0 0 14px;overflow:hidden}
+.mp{width:190px;flex-shrink:0;border-radius:14px 0 0 0;overflow:hidden}
 .mp img{width:100%;height:100%;object-fit:cover;display:block}
 .minfo{padding:26px 26px 26px 22px;flex:1}
 .mtitle{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;line-height:1;color:#fff;margin-bottom:3px}
@@ -135,11 +135,42 @@ h1 em{color:var(--gold);font-style:normal}
 .mplot{font-size:12px;line-height:1.7;color:var(--muted2);margin-bottom:16px}
 .mmeta{font-size:11px;color:var(--muted2);margin-bottom:5px}
 .mmeta span{color:var(--muted)}
-.macts{display:flex;gap:9px;margin-top:18px}
+.macts{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
 .bimdb{padding:8px 16px;background:var(--gold);color:#000;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s}
 .bimdb:hover{background:var(--gold2)}
 .bclose{padding:8px 16px;background:transparent;color:var(--muted2);border:1px solid var(--border-light);border-radius:7px;font-family:'Outfit',sans-serif;font-size:13px;cursor:pointer;transition:all .15s}
 .bclose:hover{color:var(--text);border-color:var(--muted2)}
+.btrailer{padding:8px 16px;background:#ff0000;color:#fff;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.btrailer:hover{background:#cc0000}
+.bsongs{padding:8px 16px;background:#1db954;color:#fff;border:none;border-radius:7px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s}
+.bsongs:hover{background:#17a349}
+/* MEDIA TABS */
+.mtab-bar{display:flex;gap:0;border-bottom:1px solid var(--border);margin:0}
+.mtab-btn{padding:10px 18px;font-size:12px;font-family:'JetBrains Mono',monospace;color:var(--muted);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-1px}
+.mtab-btn:hover{color:var(--text)}
+.mtab-btn.active{color:var(--gold);border-bottom-color:var(--gold)}
+.mtab-panel{display:none;padding:16px 20px}
+.mtab-panel.active{display:block}
+/* POSTER GALLERY */
+.mgallery{display:flex;gap:10px;flex-wrap:wrap}
+.mgallery img{height:160px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:border-color .2s,transform .2s;object-fit:cover}
+.mgallery img:hover{border-color:var(--gold);transform:scale(1.03)}
+/* LIGHTBOX */
+.lbox{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:2000;display:none;align-items:center;justify-content:center}
+.lbox.open{display:flex}
+.lbox img{max-width:90vw;max-height:90vh;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.8)}
+.lbox-close{position:absolute;top:16px;right:20px;font-size:28px;color:#fff;cursor:pointer;background:none;border:none;line-height:1}
+/* TRAILER */
+.yt-wrap{position:relative;padding-bottom:56.25%;height:0;border-radius:8px;overflow:hidden;background:#000}
+.yt-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.yt-search-hint{font-size:12px;color:var(--muted);margin-bottom:10px;font-family:'JetBrains Mono',monospace}
+/* SONGS */
+.songs-links{display:flex;flex-direction:column;gap:10px}
+.song-link{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--surface);border:1px solid var(--border-light);border-radius:8px;text-decoration:none;color:var(--text);transition:border-color .2s}
+.song-link:hover{border-color:var(--gold)}
+.song-link .sli{font-size:20px}
+.song-link .slt{font-size:13px;font-weight:500}
+.song-link .sls{font-size:11px;color:var(--muted)}
 
 ::-webkit-scrollbar{width:5px}
 ::-webkit-scrollbar-track{background:var(--bg)}
@@ -160,8 +191,7 @@ header{padding:32px 20px 24px}
   <div class="hglow"></div>
   <div class="hi">
     <div class="eyebrow">✦ Live OMDB / IMDB Data</div>
-    <h1>IMBD<em>MOVIES</em></h1>
-    <h2>Secret key : d5cb3752</h2>
+    <h1>YREDDY<em>VAULT</em></h1>
     <p class="sub"><span class="ldot"></span>Real-time movie search &amp; filters · Telugu · Hindi · Tamil · Malayalam · English</p>
   </div>
 </header>
@@ -281,7 +311,29 @@ header{padding:32px 20px 24px}
   <div class="modal">
     <button class="mclose" onclick="closeModalDirect()">✕</button>
     <div class="mi" id="modalInner"></div>
+    <div id="modalMedia" style="display:none">
+      <div class="mtab-bar">
+        <button class="mtab-btn active" onclick="switchMTab('gallery',this)">🖼 Images</button>
+        <button class="mtab-btn" onclick="switchMTab('trailer',this)">▶ Trailer</button>
+        <button class="mtab-btn" onclick="switchMTab('songs',this)">🎵 Songs</button>
+      </div>
+      <div class="mtab-panel active" id="mpGallery">
+        <div class="mgallery" id="galleryGrid"></div>
+      </div>
+      <div class="mtab-panel" id="mpTrailer">
+        <div class="yt-search-hint" id="ytHint"></div>
+        <div class="yt-wrap" id="ytWrap"></div>
+      </div>
+      <div class="mtab-panel" id="mpSongs">
+        <div class="songs-links" id="songsLinks"></div>
+      </div>
+    </div>
   </div>
+</div>
+
+<div class="lbox" id="lbox" onclick="document.getElementById('lbox').classList.remove('open')">
+  <button class="lbox-close" onclick="document.getElementById('lbox').classList.remove('open')">✕</button>
+  <img id="lboxImg" src="" alt="">
 </div>
 
 <script>
@@ -491,8 +543,11 @@ initChips('genreChips','genre');
 initChips('ratingChips','rating');
 
 // Modal
+var currentModalMovie = null;
+
 async function openModal(imdbId){
   document.getElementById('modal').classList.add('open');
+  document.getElementById('modalMedia').style.display = 'none';
   document.getElementById('modalInner').innerHTML = '<div style="padding:40px;color:var(--muted);font-family:JetBrains Mono,monospace;font-size:12px">Loading…</div>';
   var d = modalCache[imdbId];
   if(!d && apiKey){
@@ -507,9 +562,10 @@ async function openModal(imdbId){
     return;
   }
   var m = parseMovie(d);
+  currentModalMovie = m;
   var lc = langClass(m.lang);
   document.getElementById('modalInner').innerHTML =
-    '<div class="mp">'+(m.poster?'<img src="'+m.poster+'" alt="'+esc(m.title)+'">'
+    '<div class="mp">'+(m.poster?'<img src="'+m.poster+'" alt="'+esc(m.title)+'" style="cursor:pointer" onclick="openLightbox(\''+m.poster+'\')">'  
       :'<div class="pfb" style="height:100%"><span class="fi">🎬</span></div>')+'</div>'
     +'<div class="minfo">'
     +'<div class="mtitle">'+esc(m.title)+'</div>'
@@ -524,10 +580,77 @@ async function openModal(imdbId){
     +'<a class="bimdb" href="https://www.imdb.com/title/'+m.imdbId+'/" target="_blank">View on IMDB ↗</a>'
     +'<button class="bclose" onclick="closeModalDirect()">Close</button>'
     +'</div></div>';
+
+  // Show media section
+  document.getElementById('modalMedia').style.display = 'block';
+  // Reset to gallery tab
+  switchMTab('gallery', document.querySelector('.mtab-btn'));
+  loadGallery(m);
 }
+
+function loadGallery(m){
+  var grid = document.getElementById('galleryGrid');
+  // Show main poster + IMDB photos link
+  var imgs = [];
+  if(m.poster) imgs.push(m.poster);
+  // Generate alternate size poster URLs from OMDB (SX300, SX500, SX700)
+  if(m.poster){
+    imgs.push(m.poster.replace(/_SX\d+/, '_SX500'));
+    imgs.push(m.poster.replace(/_SX\d+/, '_SX700'));
+    imgs.push(m.poster.replace(/_SX\d+/, '_SX300'));
+  }
+  // Deduplicate
+  imgs = imgs.filter(function(v,i,a){ return a.indexOf(v)===i; });
+  grid.innerHTML = imgs.map(function(src){
+    return '<img src="'+src+'" alt="poster" onerror="this.style.display=\'none\'" onclick="openLightbox(\''+src+'\')">';
+  }).join('')
+  + '<a href="https://www.imdb.com/title/'+m.imdbId+'/mediaindex" target="_blank" style="display:flex;align-items:center;justify-content:center;height:160px;min-width:100px;background:var(--surface);border:1px dashed var(--border-light);border-radius:6px;color:var(--gold);font-size:12px;text-decoration:none;font-family:JetBrains Mono,monospace;padding:10px;text-align:center">📷 More on IMDB ↗</a>';
+}
+
+function loadTrailer(m){
+  var q = encodeURIComponent(m.title+' '+m.year+' official trailer');
+  document.getElementById('ytHint').textContent = 'Searching YouTube for: '+m.title+' trailer';
+  // Embed YouTube search — opens in iframe via YouTube search embed
+  document.getElementById('ytWrap').innerHTML =
+    '<iframe src="https://www.youtube.com/embed?listType=search&list='+q+'" allowfullscreen allow="autoplay; encrypted-media"></iframe>';
+}
+
+function loadSongs(m){
+  var q = encodeURIComponent(m.title+' '+m.year);
+  var ytQ = encodeURIComponent(m.title+' '+m.year+' songs jukebox');
+  document.getElementById('songsLinks').innerHTML =
+    '<a class="song-link" href="https://www.youtube.com/results?search_query='+ytQ+'" target="_blank">'
+    +'<span class="sli">▶</span><div><div class="slt">YouTube — Songs / Jukebox</div><div class="sls">Search "'+m.title+' songs jukebox" on YouTube</div></div></a>'
+    +'<a class="song-link" href="https://open.spotify.com/search/'+q+'" target="_blank">'
+    +'<span class="sli">🎧</span><div><div class="slt">Spotify — Soundtrack</div><div class="sls">Search on Spotify</div></div></a>'
+    +'<a class="song-link" href="https://music.youtube.com/search?q='+q+'" target="_blank">'
+    +'<span class="sli">🎵</span><div><div class="slt">YouTube Music</div><div class="sls">Search on YouTube Music</div></div></a>'
+    +'<a class="song-link" href="https://www.jiosaavn.com/search/'+q+'" target="_blank">'
+    +'<span class="sli">🎶</span><div><div class="slt">JioSaavn</div><div class="sls">Search on JioSaavn</div></div></a>';
+}
+
+function switchMTab(tab, btn){
+  document.querySelectorAll('.mtab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.mtab-panel').forEach(function(p){ p.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  var panels = {gallery:'mpGallery', trailer:'mpTrailer', songs:'mpSongs'};
+  document.getElementById(panels[tab]).classList.add('active');
+  if(!currentModalMovie) return;
+  if(tab==='trailer') loadTrailer(currentModalMovie);
+  if(tab==='songs') loadSongs(currentModalMovie);
+}
+
+function openLightbox(src){
+  document.getElementById('lboxImg').src = src;
+  document.getElementById('lbox').classList.add('open');
+}
+
 function closeModal(e){ if(e.target === document.getElementById('modal')) closeModalDirect(); }
-function closeModalDirect(){ document.getElementById('modal').classList.remove('open'); }
-document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModalDirect(); });
+function closeModalDirect(){
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('ytWrap').innerHTML = ''; // stop video
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape'){ closeModalDirect(); document.getElementById('lbox').classList.remove('open'); } });
 </script>
 </body>
 </html>

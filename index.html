@@ -191,7 +191,7 @@ header{padding:32px 20px 24px}
   <div class="hglow"></div>
   <div class="hi">
     <div class="eyebrow">✦ Live OMDB / IMDB Data</div>
-    <h1>YREDDY<em>VAULT</em></h1>
+    <h1>IMDB<em>VAULT</em></h1>
     <p class="sub"><span class="ldot"></span>Real-time movie search &amp; filters · Telugu · Hindi · Tamil · Malayalam · English</p>
   </div>
 </header>
@@ -640,15 +640,15 @@ async function loadTrailer(m){
   // Use YouTube oEmbed-compatible noembed to get video ID
   var videos = await searchYouTube(q);
   if(!videos.length){
-    wrap.innerHTML = '';
-    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">No trailer found. <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(q)+'" target="_blank" style="color:var(--gold)">Search on YouTube ↗</a></div>';
+    // Last resort: embed YouTube search results page via allorigins iframe trick
+    hint.innerHTML = '🔍 '+q+' &nbsp;<span style="color:var(--muted2);font-size:10px">(using YouTube embed fallback)</span>';
+    wrap.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed?listType=search&list='+encodeURIComponent(q)+'&rel=0" allowfullscreen allow="autoplay;encrypted-media"></iframe>';
+    list.innerHTML = '';
     return;
   }
-  // Auto-play first result
   playYT(videos[0].id, wrap);
-  // Show list of results
   list.innerHTML = videos.map(function(v,i){
-    return '<div class="yt-vid-item" onclick="playYT(\''+v.id+'\',document.getElementById(\'ytWrap\'))" style="'+(i===0?'border-color:var(--gold)':'')+'">'
+    return '<div class="yt-vid-item" onclick="playYT(\''+v.id+'\',document.getElementById(\'ytWrap\'));document.querySelectorAll(\'#ytList .yt-vid-item\').forEach(function(x){x.style.borderColor=\'\';});this.style.borderColor=\'var(--gold)\'" style="'+(i===0?'border-color:var(--gold)':'')+'">'
       +'<img src="https://img.youtube.com/vi/'+v.id+'/mqdefault.jpg" alt="">'
       +'<div><div class="vt">'+esc(v.title)+'</div><div class="vc">'+esc(v.channel)+'</div></div></div>';
   }).join('');
@@ -663,40 +663,70 @@ async function loadSongs(m){
   wrap.innerHTML = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;font-family:JetBrains Mono,monospace">Loading…</div>';
   var videos = await searchYouTube(q);
   if(!videos.length){
-    wrap.innerHTML = '';
-    list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:10px">No songs found. <a href="https://www.youtube.com/results?search_query='+encodeURIComponent(q)+'" target="_blank" style="color:var(--gold)">Search on YouTube ↗</a></div>';
+    hint.innerHTML = '🎵 '+q+' &nbsp;<span style="color:var(--muted2);font-size:10px">(using YouTube embed fallback)</span>';
+    wrap.innerHTML = '<iframe src="https://www.youtube-nocookie.com/embed?listType=search&list='+encodeURIComponent(q)+'&rel=0" allowfullscreen allow="autoplay;encrypted-media"></iframe>';
+    list.innerHTML = '';
     return;
   }
   playYT(videos[0].id, wrap);
   list.innerHTML = videos.map(function(v,i){
-    return '<div class="yt-vid-item" onclick="playYT(\''+v.id+'\',document.getElementById(\'songsWrap\'))" style="'+(i===0?'border-color:var(--gold)':'')+'">'
+    return '<div class="yt-vid-item" onclick="playYT(\''+v.id+'\',document.getElementById(\'songsWrap\'));document.querySelectorAll(\'#songsList .yt-vid-item\').forEach(function(x){x.style.borderColor=\'\';});this.style.borderColor=\'var(--gold)\'" style="'+(i===0?'border-color:var(--gold)':'')+'">'
       +'<img src="https://img.youtube.com/vi/'+v.id+'/mqdefault.jpg" alt="">'
       +'<div><div class="vt">'+esc(v.title)+'</div><div class="vc">'+esc(v.channel)+'</div></div></div>';
   }).join('');
 }
 
-// Fetch YouTube video IDs using the public YouTube search page via a CORS proxy
+// Public Invidious instances to try in order
+var INV_INSTANCES = [
+  'https://invidious.nerdvpn.de',
+  'https://invidious.privacydev.net',
+  'https://inv.nadeko.net',
+  'https://invidious.io.lol',
+  'https://invidious.fdn.fr',
+  'https://yt.cdaut.de'
+];
+
 async function searchYouTube(query){
-  try{
-    // Use youtube-search-results via noembed / invidious public API (no key needed)
-    var inv = 'https://inv.nadeko.net'; // public Invidious instance
-    var r = await fetch(inv+'/api/v1/search?q='+encodeURIComponent(query)+'&type=video&fields=videoId,title,author');
-    if(!r.ok) throw new Error();
-    var data = await r.json();
-    return (data||[]).slice(0,6).map(function(v){
-      return {id:v.videoId, title:v.title, channel:v.author};
-    });
-  } catch(e){
-    // fallback: try another public Invidious instance
+  var q = encodeURIComponent(query);
+  for(var i=0;i<INV_INSTANCES.length;i++){
     try{
-      var r2 = await fetch('https://invidious.privacydev.net/api/v1/search?q='+encodeURIComponent(query)+'&type=video&fields=videoId,title,author');
-      if(!r2.ok) throw new Error();
-      var data2 = await r2.json();
-      return (data2||[]).slice(0,6).map(function(v){
-        return {id:v.videoId, title:v.title, channel:v.author};
+      var r = await fetch(INV_INSTANCES[i]+'/api/v1/search?q='+q+'&type=video&fields=videoId,title,author',{signal:AbortSignal.timeout(4000)});
+      if(!r.ok) continue;
+      var data = await r.json();
+      if(!Array.isArray(data)||!data.length) continue;
+      return data.slice(0,6).map(function(v){
+        return {id:v.videoId,title:v.title,channel:v.author};
       });
-    } catch(e2){ return []; }
+    }catch(e){ continue; }
   }
+  // Final fallback: extract videoId from YouTube search HTML via allorigins proxy
+  try{
+    var proxy = 'https://api.allorigins.win/get?url='+encodeURIComponent('https://www.youtube.com/results?search_query='+q);
+    var pr = await fetch(proxy,{signal:AbortSignal.timeout(6000)});
+    var pd = await pr.json();
+    var html = pd.contents||'';
+    var ids=[], titles=[], seen={};
+    var re = /"videoId":"([a-zA-Z0-9_-]{11})","thumbnail".*?"title":\{"runs":\[\{"text":"([^"]+)"/g;
+    var m;
+    while((m=re.exec(html))!==null){
+      if(!seen[m[1]]){
+        seen[m[1]]=1;
+        ids.push({id:m[1],title:m[2],channel:''});
+        if(ids.length>=6) break;
+      }
+    }
+    if(ids.length) return ids;
+    // simpler fallback regex
+    var re2 = /watch\?v=([a-zA-Z0-9_-]{11})/g, seen2={}, ids2=[];
+    while((m=re2.exec(html))!==null){
+      if(!seen2[m[1]]){
+        seen2[m[1]]=1;
+        ids2.push({id:m[1],title:query+' ('+m[1]+')',channel:''});
+        if(ids2.length>=6) break;
+      }
+    }
+    return ids2;
+  }catch(e){ return []; }
 }
 
 function playYT(videoId, wrapEl){
